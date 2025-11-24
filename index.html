@@ -36,49 +36,49 @@
         "react": "https://aistudiocdn.com/react@^19.2.0",
         "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
         "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
         "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
         "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js",
-        "firebase/": "https://aistudiocdn.com/firebase@^12.5.0/"
+        "firebase/": "https://aistudiocdn.com/firebase@^12.5.0/",
+        "framer-motion": "https://esm.sh/framer-motion@10.18.0?external=react,react-dom"
       }
     }
+    </script>
+    <script>
+      // Polyfill for process.env to prevent crashes in browser environment
+      window.process = {
+        env: {
+          NODE_ENV: 'development',
+          // API_KEY will be injected by the environment or window.aistudio
+        }
+      };
     </script>
     <style>
         body {
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
           
-          /* Simplified static background with texture and subtle glow */
-          background-color: #17181C; /* Base dark color */
+          /* Nicer, slightly softer dark gray background */
+          background-color: #1E1F24; 
+          
+          /* Enhanced glow + dot texture */
           background-image: 
-            radial-gradient(circle at 10% 10%, rgba(239, 96, 53, 0.08) 0%, transparent 40%), /* Top-left corner glow */
-            url('data:image/svg+xml;charset=utf8,<svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><g fill="%23FFFFFF" fill-opacity="0.03"><path d="M0 0h10v1H0zM0 0h1v10H0z"/></g></svg>'); /* Subtle noise/grid texture */
+            radial-gradient(circle at 0% 0%, rgba(239, 96, 53, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 100% 100%, rgba(239, 96, 53, 0.08) 0%, transparent 40%),
+            url('data:image/svg+xml;charset=utf8,<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="%23FFFFFF" fill-opacity="0.03"><circle cx="1" cy="1" r="1"/></g></svg>');
           
           background-size:
-            100% 100%, /* For the radial gradient */
-            10px 10px; /* For the repeating texture */
+            100% 100%, /* Top-left glow */
+            100% 100%, /* Bottom-right glow */
+            24px 24px; /* Dot grid spacing */
           
           background-position:
-            0% 0%, /* Anchor radial gradient to top-left */
-            0% 0%; /* Start texture from top-left */
+            0% 0%,
+            0% 0%,
+            0% 0%;
 
-          background-repeat: no-repeat, repeat; /* No-repeat for glow, repeat for texture */
-          background-attachment: fixed; /* Keep background fixed while scrolling */
-        }
-
-        /* Standard spin animation */
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        /* Sparkle burst animation for spinner */
-        @keyframes sparkle-burst {
-            0% { transform: scale(0) rotate(0deg); opacity: 1; }
-            100% { transform: scale(1.5) rotate(360deg); opacity: 0; }
+          background-repeat: no-repeat, no-repeat, repeat;
+          background-attachment: fixed;
         }
 
         /* Custom Drop Shadow for Primary Color */
@@ -104,7 +104,7 @@
             0 0 5px rgba(239, 96, 53, 0.3), /* Inner glow */
             0 0 15px rgba(239, 96, 53, 0.15), /* Outer halo */
             inset 0 0 8px rgba(239, 96, 53, 0.2); /* Inner highlight */
-          transition: all 0.3s ease-in-out;
+          transition: box-shadow 0.3s ease-in-out;
           will-change: transform, box-shadow; /* Animation performance optimization */
         }
         .dark .ethereal-border {
@@ -114,90 +114,149 @@
                 0 0 10px rgba(239, 96, 53, 0.05), 
                 inset 0 0 4px rgba(255, 255, 255, 0.05); 
         }
-        .ethereal-border:hover {
-          transform: translateY(-4px); /* Subtle lift effect on hover */
-          box-shadow: 
-            0 0 8px rgba(239, 96, 53, 0.5), 
-            0 0 20px rgba(239, 96, 53, 0.25),
-            inset 0 0 10px rgba(239, 96, 53, 0.3);
+
+        /* --- Smiley Loading Animation --- */
+        .smiley {
+            width: 8em;
+            height: 8em;
         }
-        .dark .ethereal-border:hover {
-            transform: translateY(-4px); /* Subtle lift effect on hover */
-            box-shadow: 
-                0 0 8px rgba(239, 96, 53, 0.3), 
-                0 0 15px rgba(239, 96, 53, 0.1),
-                inset 0 0 6px rgba(255, 255, 255, 0.08);
+        .smiley__eye1,
+        .smiley__eye2,
+        .smiley__mouth1,
+        .smiley__mouth2 {
+            animation: eye1 3s ease-in-out infinite;
+        }
+        .smiley__eye1,
+        .smiley__eye2 {
+            transform-origin: 64px 64px;
+        }
+        .smiley__eye2 {
+            animation-name: eye2;
+        }
+        .smiley__mouth1 {
+            animation-name: mouth1;
+        }
+        .smiley__mouth2 {
+            animation-name: mouth2;
+            visibility: hidden;
         }
 
-
-        /* Question Transition Animations */
-        @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes eye1 {
+            from { transform: rotate(-260deg) translate(0,-56px); }
+            50%, 60% { animation-timing-function: cubic-bezier(0.17,0,0.58,1); transform: rotate(-40deg) translate(0,-56px) scale(1); }
+            to { transform: rotate(225deg) translate(0,-56px) scale(0.35); }
         }
-        .animate-fade-in {
-            animation: fade-in 0.5s ease-out forwards;
+        @keyframes eye2 {
+            from { transform: rotate(-260deg) translate(0,-56px); }
+            50% { transform: rotate(40deg) translate(0,-56px) rotate(-40deg) scale(1); }
+            52.5% { transform: rotate(40deg) translate(0,-56px) rotate(-40deg) scale(1,0); }
+            55%, 70% { animation-timing-function: cubic-bezier(0,0,0.28,1); transform: rotate(40deg) translate(0,-56px) rotate(-40deg) scale(1); }
+            to { transform: rotate(150deg) translate(0,-56px) scale(0.4); }
         }
-        @keyframes fade-out {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-10px); }
+        @keyframes mouth1 {
+            from { animation-timing-function: ease-in; stroke-dasharray: 0 351.86; stroke-dashoffset: 0; }
+            25% { animation-timing-function: ease-out; stroke-dasharray: 175.93 351.86; stroke-dashoffset: 0; }
+            50% { animation-timing-function: steps(1,start); stroke-dasharray: 175.93 351.86; stroke-dashoffset: -175.93; visibility: visible; }
+            75%, to { visibility: hidden; }
         }
-        .animate-fade-out {
-            animation: fade-out 0.5s ease-in forwards;
+        @keyframes mouth2 {
+            from { animation-timing-function: steps(1,end); visibility: hidden; }
+            50% { animation-timing-function: ease-in-out; visibility: visible; stroke-dashoffset: 0; }
+            to { stroke-dashoffset: -351.86; }
         }
-
-        /* Spinner Color Cycle Animation */
-        @keyframes color-cycle {
-            0% { border-top-color: #EF6035; } /* primary */
-            33% { border-top-color: #3B82F6; } /* a blue */
-            66% { border-top-color: #10B981; } /* a green */
-            100% { border-top-color: #EF6035; }
+        
+        /* Animated Gradient Border */
+        @keyframes gradient-x {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-        .animate-spin-color {
-            animation: spin 1s linear infinite, color-cycle 2s linear infinite;
-        }
-        .spinner-sparkle::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 8px;
-            height: 8px;
-            background-color: rgba(255, 255, 255, 0.7); /* White sparkle */
-            border-radius: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            animation: sparkle-burst 1s ease-out infinite;
-            filter: blur(2px);
-        }
-
-        /* Answer Feedback Animations */
-        @keyframes pulse-correct {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); background-color: rgba(16, 185, 129, 0.1); } /* green-500 */
-            50% { transform: scale(1.08); box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); background-color: rgba(16, 185, 129, 0.2); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); background-color: rgba(16, 185, 129, 0.1); }
-        }
-        .animate-pulse-correct {
-            animation: pulse-correct 0.7s ease-out forwards;
-        }
-
-        @keyframes shake-incorrect {
-            0%, 100% { transform: translateX(0) rotate(0deg); }
-            10% { transform: translateX(-8px) rotate(-2deg); }
-            20% { transform: translateX(8px) rotate(2deg); }
-            30% { transform: translateX(-8px) rotate(-2deg); }
-            40% { transform: translateX(8px) rotate(2deg); }
-            50% { transform: translateX(-8px) rotate(-2deg); }
-            60% { transform: translateX(8px) rotate(2deg); }
-            70% { transform: translateX(-8px) rotate(-2deg); }
-            80% { transform: translateX(8px) rotate(2deg); }
-            90% { transform: translateX(-8px) rotate(-2deg); }
-        }
-        .animate-shake-incorrect {
-            animation: shake-incorrect 0.5s ease-in-out;
+        .animate-gradient-x {
+            background-size: 200% 200%;
+            animation: gradient-x 4s ease infinite;
         }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark font-body text-gray-800 dark:text-gray-200">
+<body class="bg-background-light dark:bg-background-dark font-body text-gray-800 dark:text-gray-200 overflow-x-hidden">
     <div id="root" class="flex flex-col min-h-screen"></div>
+    
+    <!-- Constellation Background Script -->
+    <script>
+      (function() {
+        const canvas = document.createElement('canvas');
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.zIndex = '-1';
+        canvas.style.pointerEvents = 'none';
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+          width = canvas.width = window.innerWidth;
+          height = canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+          constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = (Math.random() - 0.5) * 0.5;
+            this.size = Math.random() * 2 + 1;
+          }
+          update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 0 || this.x > width) this.vx *= -1;
+            if (this.y < 0 || this.y > height) this.vy *= -1;
+          }
+          draw() {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        function init() {
+          resize();
+          for (let i = 0; i < 50; i++) {
+            particles.push(new Particle());
+          }
+          animate();
+        }
+
+        function animate() {
+          ctx.clearRect(0, 0, width, height);
+          for (let i = 0; i < particles.length; i++) {
+            particles[i].update();
+            particles[i].draw();
+            for (let j = i; j < particles.length; j++) {
+              const dx = particles[i].x - particles[j].x;
+              const dy = particles[i].y - particles[j].y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance < 150) {
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(239, 96, 53, ${0.1 - distance / 1500})`;
+                ctx.lineWidth = 1;
+                ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(particles[j].x, particles[j].y);
+                ctx.stroke();
+              }
+            }
+          }
+          requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        init();
+      })();
+    </script>
 </body>
 </html>

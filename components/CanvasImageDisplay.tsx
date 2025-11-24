@@ -2,7 +2,10 @@ import React, { useRef, useEffect, useState } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import { getImageData } from '../services/imageStore';
 
-// Worker code is now inlined as a string to create a Blob URL, solving cross-origin issues.
+// Worker code is inlined to avoid cross-origin issues.
+// Updated to use "Blur-Contain" logic:
+// 1. Draw the image scaled to COVER the canvas, apply heavy blur and darken.
+// 2. Draw the image scaled to CONTAIN within the canvas, centered.
 const workerCode = `
 const base64ToBlob = (base64, mimeType = 'image/png') => {
   const byteCharacters = atob(base64);
@@ -18,23 +21,21 @@ self.onmessage = async (e) => {
   const { canvas, imageDataString, width, height, devicePixelRatio } = e.data;
   const context = canvas.getContext('2d');
 
+  // Set canvas dimensions based on DPR
   canvas.width = width * devicePixelRatio;
   canvas.height = height * devicePixelRatio;
-  context?.scale(devicePixelRatio, devicePixelRatio);
-
-  if (context) {
-    context.clearRect(0, 0, canvas.width, canvas.height);
-  }
+  
+  // Reset transform for drawing
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.clearRect(0, 0, canvas.width, canvas.height);
 
   try {
-    if (!context) throw new Error('Could not get 2D context from canvas in worker.');
-    if (!imageDataString) throw new Error('No image data string provided to worker.');
+    if (!imageDataString) throw new Error('No image data string provided.');
 
     let imageBitmap;
-
     if (imageDataString.startsWith('http')) {
       const response = await fetch(imageDataString);
-      if (!response.ok) throw new Error(\`Failed to fetch image from URL: \${response.statusText}\`);
+      if (!response.ok) throw new Error(\`Failed to fetch: \${response.statusText}\`);
       const blob = await response.blob();
       imageBitmap = await createImageBitmap(blob);
     } else {
@@ -42,37 +43,64 @@ self.onmessage = async (e) => {
       imageBitmap = await createImageBitmap(blob);
     }
     
-    // Fill background to avoid transparent letterboxing
-    context.fillStyle = '#17181C'; // background-dark
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    const cw = canvas.width;
+    const ch = canvas.height;
+    const iw = imageBitmap.width;
+    const ih = imageBitmap.height;
+    const canvasAspect = cw / ch;
+    const imageAspect = iw / ih;
 
-    const canvasAspect = canvas.width / canvas.height;
-    const imageAspect = imageBitmap.width / imageBitmap.height;
-    let drawWidth, drawHeight, x, y;
-
-    // 'cover' behavior: fill the canvas, cropping the image if necessary
+    // --- LAYER 1: BACKGROUND (Blurred & Darkened Cover) ---
+    // We calculate 'cover' dimensions for the background
+    let bgW, bgH, bgX, bgY;
     if (imageAspect > canvasAspect) {
-        drawHeight = canvas.height;
-        drawWidth = drawHeight * imageAspect;
-        y = 0;
-        x = (canvas.width - drawWidth) / 2;
+        bgH = ch;
+        bgW = bgH * imageAspect;
+        bgX = (cw - bgW) / 2;
+        bgY = 0;
     } else {
-        drawWidth = canvas.width;
-        drawHeight = drawWidth / imageAspect;
-        x = 0;
-        y = (canvas.height - drawHeight) / 2;
+        bgW = cw;
+        bgH = bgW / imageAspect;
+        bgX = 0;
+        bgY = (ch - bgH) / 2;
     }
 
-    context.drawImage(imageBitmap, x, y, drawWidth, drawHeight);
+    // Draw background image
+    context.filter = 'blur(20px) brightness(0.4)';
+    context.drawImage(imageBitmap, bgX, bgY, bgW, bgH);
+    context.filter = 'none'; // Reset filter
+
+    // --- LAYER 2: FOREGROUND (Sharp Contain) ---
+    // We calculate 'contain' dimensions for the main image
+    let fgW, fgH, fgX, fgY;
+    if (imageAspect > canvasAspect) {
+        // Image is wider than canvas: fit to width
+        fgW = cw;
+        fgH = fgW / imageAspect;
+        fgX = 0;
+        fgY = (ch - fgH) / 2;
+    } else {
+        // Image is taller than canvas: fit to height
+        fgH = ch;
+        fgW = fgH * imageAspect;
+        fgY = 0;
+        fgX = (cw - fgW) / 2;
+    }
+
+    // Add a subtle drop shadow behind the main image for pop
+    context.shadowColor = "rgba(0, 0, 0, 0.5)";
+    context.shadowBlur = 20;
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 10;
+
+    context.drawImage(imageBitmap, fgX, fgY, fgW, fgH);
+
     imageBitmap.close();
-
     self.postMessage({ type: 'loaded' });
+
   } catch (error) {
-    console.error('Error rendering image in worker:', error);
-    if (context) {
-      context.clearRect(0, 0, canvas.width, canvas.height);
-    }
-    self.postMessage({ type: 'error', message: error.message || 'Unknown worker error' });
+    console.error('Worker render error:', error);
+    self.postMessage({ type: 'error', message: error.message });
   }
 };
 `;
@@ -88,7 +116,6 @@ const CanvasImageDisplay: React.FC<CanvasImageDisplayProps> = ({ imageId, alt })
   const workerUrlRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Effect to create and cleanup the worker's Blob URL.
   useEffect(() => {
     const blob = new Blob([workerCode], { type: 'application/javascript' });
     workerUrlRef.current = URL.createObjectURL(blob);
@@ -105,7 +132,6 @@ const CanvasImageDisplay: React.FC<CanvasImageDisplayProps> = ({ imageId, alt })
     };
   }, []);
 
-  // Effect to manage the worker instance based on imageId.
   useEffect(() => {
     if (workerRef.current) {
       workerRef.current.terminate();
@@ -117,7 +143,6 @@ const CanvasImageDisplay: React.FC<CanvasImageDisplayProps> = ({ imageId, alt })
     }
 
     const imageDataString = getImageData(imageId);
-
     if (!imageDataString) {
       setIsLoading(false);
       return;
@@ -145,25 +170,25 @@ const CanvasImageDisplay: React.FC<CanvasImageDisplayProps> = ({ imageId, alt })
       worker.onerror = () => setIsLoading(false);
 
     } catch (error) {
-      console.error("Failed to setup OffscreenCanvas or Worker:", error);
+      console.error("Failed to setup OffscreenCanvas:", error);
       setIsLoading(false);
     }
     
   }, [imageId]);
 
   return (
-    <div className="w-full aspect-video rounded-lg overflow-hidden shadow-lg bg-gray-200 dark:bg-gray-900 relative">
+    <div className="w-full h-full bg-black relative overflow-hidden">
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-900/50 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
           <LoadingSpinner />
         </div>
       )}
        <canvas
         ref={canvasRef}
-        className={`w-full h-full transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        className={`w-full h-full block transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
         aria-label={alt}
         role="img"
-       ></canvas>
+       />
     </div>
   );
 };

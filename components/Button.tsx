@@ -1,6 +1,7 @@
 import React from 'react';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends HTMLMotionProps<"button"> {
   children: React.ReactNode;
 }
 
@@ -10,22 +11,40 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   ...rest
 }) => {
-  const baseStyles = 'w-full py-4 px-4 rounded-lg text-white font-bold text-lg ' +
-                   'bg-gradient-to-r from-orange-400 to-red-500 shadow-lg ' +
-                   'transition-all duration-200 ease-in-out ' +
-                   'hover:from-orange-300 hover:to-red-600 hover:scale-[1.02] hover:shadow-xl hover:shadow-primary/50 ' +
-                   'active:scale-[0.97] ' +
-                   'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background-dark ' +
-                   'disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'w-full py-4 px-6 rounded-xl text-white font-black text-lg tracking-wide ' +
+                   'bg-gradient-to-r from-orange-500 to-red-600 shadow-lg ' +
+                   'disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale ' +
+                   'flex items-center justify-center relative overflow-hidden z-10';
 
   return (
-    <button
+    <motion.button
       className={`${baseStyles} ${className}`}
       disabled={disabled}
+      whileHover={!disabled ? { 
+          scale: 1.05, 
+          y: -4,
+          boxShadow: "0 20px 30px -10px rgba(239, 68, 68, 0.6)",
+          filter: "brightness(1.1)"
+      } : {}}
+      whileTap={!disabled ? { 
+          scale: 0.9, 
+          y: 0,
+          boxShadow: "0 5px 10px -5px rgba(239, 68, 68, 0.4)"
+      } : {}}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 500, damping: 15 }} // Very bouncy
       {...rest}
     >
-      {children}
-    </button>
+      {/* Shine effect */}
+      <motion.div 
+        className="absolute inset-0 bg-white/20"
+        initial={{ x: '-100%' }}
+        whileHover={{ x: '100%' }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+      />
+      <span className="relative z-10 drop-shadow-md">{children}</span>
+    </motion.button>
   );
 };
 

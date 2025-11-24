@@ -1,5 +1,4 @@
 
-
 export enum PrepositionCategory {
   LOCATION = 'Location',
   DIRECTION = 'Direction',
@@ -7,7 +6,10 @@ export enum PrepositionCategory {
   MANNER = 'Manner',
   CAUSE = 'Cause',
   POSSESSION = 'Possession',
-  ACTION_BY = 'By (Who/What)',
+  AGENT = 'Agent',
+  FREQUENCY = 'Frequency',
+  INSTRUMENT = 'Instrument',
+  PURPOSE = 'Purpose',
 }
 
 export enum Preposition {
@@ -46,6 +48,8 @@ export enum Preposition {
   WITH = 'with',
   BEYOND = 'beyond',
   UPON = 'upon',
+  PER = 'per',
+  FOR = 'for',
 }
 
 export interface PrepositionItem {
@@ -55,13 +59,18 @@ export interface PrepositionItem {
   exampleSentence: string;
 }
 
+// The 10 specific levels requested
 export enum GameLevel {
-  A1 = 'A1',
-  A2 = 'A2',
-  B1 = 'B1',
-  B2 = 'B2',
-  C1 = 'C1',
-  C2 = 'C2',
+  Level_1 = 'A1',
+  Level_2 = 'A1.5',
+  Level_3 = 'A2',
+  Level_4 = 'A2.5',
+  Level_5 = 'B1',
+  Level_6 = 'B1.5',
+  Level_7 = 'B2',
+  Level_8 = 'B2.5',
+  Level_9 = 'C1',
+  Level_10 = 'C1.5',
 }
 
 export enum AppMode {
@@ -70,20 +79,64 @@ export enum AppMode {
 
 // Data structure for a question as it is played in the game
 export interface Question {
-  id?: string; // Optional Firestore document ID
+  id?: string; 
   sentence: string;
   correctAnswer: Preposition;
   options: Preposition[];
   imageId?: string; // ID to look up the image from the non-reactive store
+  videoUrl?: string; // Blob URL for the generated video (if this is a video round)
 }
 
-// Data structure for a question as it is stored in Firestore
+// Data structure for Firestore
 export interface FirestoreQuestion {
   id?: string;
   level: GameLevel;
-  category: PrepositionCategory;
+  category: PrepositionCategory | null;
   sentence: string;
   correctAnswer: Preposition;
-  imageUrl: string;
-  createdAt: any; // Firestore Timestamp
+  options: Preposition[];
+  imageId?: string;
+  createdAt?: any;
+}
+
+// Cached question structure for IndexedDB
+export interface CachedQuestion {
+  id: string;
+  level: GameLevel;
+  preposition: Preposition;
+  sentence: string;
+  options: Preposition[];
+  visualPrompt: string; // We store the prompt so we can re-fetch/regenerate the image if needed
+  timestamp: number;
+}
+
+// --- Persistent User Progress ---
+
+export interface LevelStats {
+  correct: number;
+  total: number;
+}
+
+export interface CategoryStats {
+  correct: number;
+  total: number;
+}
+
+export interface UserProgress {
+  totalXP: number;
+  level: number; // Derived from XP (e.g. sqrt(XP))
+  questionsAnswered: number;
+  correctAnswers: number;
+  currentStreak: number;
+  bestStreak: number;
+  lastPlayed: number; // Timestamp
+  levelStats: Record<string, LevelStats>; 
+  categoryStats: Record<string, CategoryStats>; 
+}
+
+export interface QuestionResult {
+  gameLevel: GameLevel;
+  category: PrepositionCategory | null;
+  isCorrect: boolean;
+  xpEarned: number;
 }

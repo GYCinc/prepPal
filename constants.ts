@@ -1,3 +1,4 @@
+
 import { Preposition, PrepositionCategory, PrepositionItem, GameLevel } from './types';
 
 export const ALL_PREPOSITIONS: PrepositionItem[] = [
@@ -55,7 +56,6 @@ export const ALL_PREPOSITIONS: PrepositionItem[] = [
     description: 'Used for a surface, a day or date, or a public transport vehicle.',
     exampleSentence: 'The book is ___ the table.',
   },
-  // Fix: Corrected property name from 'preposition' to 'category' and removed duplicate 'preposition' key.
   {
     category: PrepositionCategory.LOCATION,
     preposition: Preposition.AT,
@@ -100,7 +100,7 @@ export const ALL_PREPOSITIONS: PrepositionItem[] = [
   },
   {
     preposition: Preposition.BY,
-    category: PrepositionCategory.ACTION_BY,
+    category: PrepositionCategory.AGENT,
     description: 'Used to show the person or thing that does an action (in a passive sentence).',
     exampleSentence: 'The book was written ___ a famous author.',
   },
@@ -196,7 +196,7 @@ export const ALL_PREPOSITIONS: PrepositionItem[] = [
   },
   {
     preposition: Preposition.WITH,
-    category: PrepositionCategory.MANNER,
+    category: PrepositionCategory.INSTRUMENT,
     description: 'Used for accompanied by, or using a tool.',
     exampleSentence: 'She painted the picture ___ a brush.',
   },
@@ -212,13 +212,65 @@ export const ALL_PREPOSITIONS: PrepositionItem[] = [
     description: 'Used for on (often in a formal context).',
     exampleSentence: 'Once ___ a time, there was a princess.',
   },
+  {
+    preposition: Preposition.PER,
+    category: PrepositionCategory.FREQUENCY,
+    description: 'Used to express rates, prices, or measurements for each unit.',
+    exampleSentence: 'The car was traveling 60 miles ___ hour.',
+  },
+  {
+    preposition: Preposition.FOR,
+    category: PrepositionCategory.PURPOSE,
+    description: 'Used to indicate the use of something or the reason for something.',
+    exampleSentence: 'This gift is ___ you.',
+  },
 ];
+
+export const PREPOSITION_DETAILS: Record<string, string> = {
+  [Preposition.IN]: "Used to indicate inclusion within space, a place, or limits.",
+  [Preposition.INTO]: "Movement or action with the result that something becomes enclosed.",
+  [Preposition.TO]: "Expresses motion in the direction of a particular location.",
+  [Preposition.TOWARDS]: "Movement in the direction of someone or something.",
+  [Preposition.THROUGH]: "Moving in one side and out of the other side.",
+  [Preposition.OUT_OF]: "From the inside to the outside of something.",
+  [Preposition.FROM]: "Indicates the starting point of motion or origin.",
+  [Preposition.AWAY_FROM]: "Moving to a greater distance from something.",
+  [Preposition.ON]: "Physically in contact with and supported by a surface.",
+  [Preposition.AT]: "Expresses a specific location, arrival point, or time.",
+  [Preposition.AGAINST]: "In contact or collision with; in opposition to.",
+  [Preposition.NEAR]: "At or to a short distance away; not far.",
+  [Preposition.BETWEEN]: "In the space separating two distinct objects or points.",
+  [Preposition.AMONG]: "Surrounded by or in the middle of a group.",
+  [Preposition.UNDER]: "Extending or directly below something.",
+  [Preposition.BELOW]: "At a lower level or layer than something else.",
+  [Preposition.BY]: "Identifying the agent performing an action; close to.",
+  [Preposition.AROUND]: "Located or moving on every side of something.",
+  [Preposition.PAST]: "To or on the further side of something.",
+  [Preposition.ACROSS]: "From one side to the other of a clear boundary.",
+  [Preposition.ALONG]: "Moving in a constant direction on a long surface.",
+  [Preposition.UP]: "Towards a higher place or position.",
+  [Preposition.ABOVE]: "In extended space over and not touching.",
+  [Preposition.OVER]: "Extending directly upwards from; covering.",
+  [Preposition.AFTER]: "In the time following an event.",
+  [Preposition.WITHIN]: "Inside the limits or boundaries of.",
+  [Preposition.INSIDE]: "Situated within the inner part of.",
+  [Preposition.OFF]: "Moving away and often down from a place.",
+  [Preposition.BEHIND]: "At the back of something, often hidden by it.",
+  [Preposition.BEFORE]: "During the period of time preceding an event.",
+  [Preposition.BENEATH]: "Extending or directly underneath (more formal).",
+  [Preposition.BESIDE]: "At the side of; next to.",
+  [Preposition.WITH]: "Using an instrument or tool; or accompanied by.",
+  [Preposition.BEYOND]: "At or to the further side of; outside the limits.",
+  [Preposition.UPON]: "A more formal or emphatic term for 'on'.",
+  [Preposition.PER]: "For each; for every (used to express rates).",
+  [Preposition.FOR]: "Used to indicate the purpose or recipient of something.",
+};
 
 export const PREPOSITION_FAMILIES: Record<string, Preposition[]> = {
   [PrepositionCategory.LOCATION]: [
-    Preposition.IN, Preposition.ON, Preposition.AT, Preposition.NEAR, Preposition.BETWEEN,
+    Preposition.ON, Preposition.AT, Preposition.NEAR, Preposition.BETWEEN,
     Preposition.AMONG, Preposition.UNDER, Preposition.BELOW, Preposition.ABOVE,
-    Preposition.WITHIN, Preposition.INSIDE, Preposition.BEHIND, Preposition.BEFORE,
+    Preposition.BEHIND, Preposition.BEFORE, Preposition.IN, Preposition.INSIDE, Preposition.WITHIN,
     Preposition.BENEATH, Preposition.BESIDE, Preposition.BEYOND, Preposition.UPON
   ],
   [PrepositionCategory.DIRECTION]: [
@@ -229,55 +281,25 @@ export const PREPOSITION_FAMILIES: Record<string, Preposition[]> = {
   [PrepositionCategory.TIME]: [
     Preposition.AFTER, Preposition.BEFORE, Preposition.IN, Preposition.ON, Preposition.AT
   ],
-  [PrepositionCategory.MANNER]: [
-    Preposition.WITH
-  ],
-  [PrepositionCategory.CAUSE]: [], // Could be expanded, e.g., 'because of'
-  [PrepositionCategory.POSSESSION]: [], // Could be expanded, e.g., 'of'
-  [PrepositionCategory.ACTION_BY]: [Preposition.BY],
+  [PrepositionCategory.MANNER]: [], 
+  [PrepositionCategory.CAUSE]: [], 
+  [PrepositionCategory.POSSESSION]: [], 
+  [PrepositionCategory.AGENT]: [Preposition.BY],
+  [PrepositionCategory.FREQUENCY]: [Preposition.PER],
+  [PrepositionCategory.INSTRUMENT]: [Preposition.WITH],
+  [PrepositionCategory.PURPOSE]: [Preposition.FOR],
 };
 
-// Fix: Redefine PREPOSITIONS_BY_LEVEL by defining arrays for each level sequentially
-// to avoid "Block-scoped variable used before its declaration" errors.
-const A1_PREPOSITIONS = [
-  Preposition.IN, Preposition.ON, Preposition.AT, Preposition.TO, Preposition.FROM,
-  Preposition.UNDER, Preposition.OVER, Preposition.BY, Preposition.WITH,
-];
-
-const A2_PREPOSITIONS = [
-  ...A1_PREPOSITIONS,
-  Preposition.INTO, Preposition.THROUGH, Preposition.NEAR, Preposition.ABOVE,
-  Preposition.AFTER, Preposition.BEFORE, Preposition.BESIDE, Preposition.OFF,
-];
-
-const B1_PREPOSITIONS = [
-  ...A2_PREPOSITIONS,
-  Preposition.AMONG, Preposition.AROUND, Preposition.PAST, Preposition.ACROSS,
-  Preposition.ALONG, Preposition.UP, Preposition.BEHIND, Preposition.INSIDE,
-];
-
-const B2_PREPOSITIONS = [
-  ...B1_PREPOSITIONS,
-  Preposition.OUT_OF, Preposition.TOWARDS, Preposition.AWAY_FROM, Preposition.BELOW,
-  Preposition.WITHIN, Preposition.BENEATH,
-];
-
-const C1_PREPOSITIONS = [
-  ...B2_PREPOSITIONS,
-  Preposition.AGAINST, Preposition.BEYOND, Preposition.UPON,
-];
-
-const C2_PREPOSITIONS = [
-  ...C1_PREPOSITIONS,
-  // All remaining, highly nuanced, or idiomatic prepositions
-  // (Ensure ALL_PREPOSITIONS are covered by C2 in practice)
-];
-
+// 10-Level Redistribution
 export const PREPOSITIONS_BY_LEVEL: Record<GameLevel, Preposition[]> = {
-  [GameLevel.A1]: A1_PREPOSITIONS,
-  [GameLevel.A2]: A2_PREPOSITIONS,
-  [GameLevel.B1]: B1_PREPOSITIONS,
-  [GameLevel.B2]: B2_PREPOSITIONS,
-  [GameLevel.C1]: C1_PREPOSITIONS,
-  [GameLevel.C2]: C2_PREPOSITIONS,
+  [GameLevel.Level_1]: [Preposition.IN, Preposition.ON, Preposition.AT, Preposition.TO], // A1
+  [GameLevel.Level_2]: [Preposition.FROM, Preposition.UP, Preposition.WITH, Preposition.BY, Preposition.FOR], // A1.5
+  [GameLevel.Level_3]: [Preposition.UNDER, Preposition.OVER, Preposition.FOR], // A2
+  [GameLevel.Level_4]: [Preposition.BEFORE, Preposition.AFTER, Preposition.NEAR], // A2.5
+  [GameLevel.Level_5]: [Preposition.BEHIND, Preposition.INTO, Preposition.OFF], // B1
+  [GameLevel.Level_6]: [Preposition.BETWEEN, Preposition.AMONG, Preposition.AROUND], // B1.5
+  [GameLevel.Level_7]: [Preposition.THROUGH, Preposition.ACROSS, Preposition.ALONG], // B2
+  [GameLevel.Level_8]: [Preposition.PAST, Preposition.INSIDE, Preposition.TOWARDS], // B2.5
+  [GameLevel.Level_9]: [Preposition.OUT_OF, Preposition.ABOVE, Preposition.BELOW, Preposition.WITHIN], // C1
+  [GameLevel.Level_10]: [Preposition.BENEATH, Preposition.BESIDE, Preposition.AGAINST, Preposition.BEYOND, Preposition.UPON, Preposition.PER], // C1.5
 };
